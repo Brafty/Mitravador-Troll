@@ -1,0 +1,61 @@
+package DaPackage;
+import java.util.List;
+import java.util.ArrayList;
+
+public class Country {
+	List<Oblast> OwnedProvinces;
+	List<Oblast> Border=new ArrayList<Oblast>();
+	Oblast MainProvince;
+	String Color;
+	int Points;
+	
+	public Country(String Name, Oblast startingProvince, String color) {
+		Points=900;
+		Color=color;
+		MainProvince=startingProvince;
+		OwnedProvinces=new ArrayList<Oblast>();
+		AddProvince(MainProvince);
+		
+	}
+	public void AddProvince(Oblast Pr) {
+		OwnedProvinces.add(Pr);
+		Pr.taken=true;
+		if(this.Color.equals("_Green")){
+			Pr.BaseProv=Pr.GreenProv;
+		}else {
+			Pr.BaseProv=Pr.PurpleProv;
+		}
+		Points+=100;
+	}
+	public void RemoveProvince(Oblast Pr) {
+		OwnedProvinces.remove(Pr);
+		Points-=100;
+	}		
+	
+	public void CalculateBorder() {
+		Border.removeAll(Border);
+		OwnedProvinces.forEach((n)->{
+			for(int i=0;i<n.ProvinceBorder.length;i++) {
+				if(!Border.contains(n.ProvinceBorder[i])&&!OwnedProvinces.contains(n.ProvinceBorder[i])){
+					Border.add(n.ProvinceBorder[i]);
+
+				}
+			}
+		});
+		if(!GameWindow.AllTaken()) {
+			Border.removeIf(n->(n.taken));
+		}
+		if(Border.isEmpty()) {
+			for(int i=0;i<Oblast.AllOblasts.length;i++) {
+				if(Oblast.AllOblasts[i].taken==false) Border.add(Oblast.AllOblasts[i]);
+			}
+		}
+	}
+	public void removeTaken() {
+		OwnedProvinces.forEach((n)->{
+			for(int i=0;i<n.ProvinceBorder.length;i++) {
+				if(n.ProvinceBorder[i].taken)Border.remove(n.ProvinceBorder[i]);
+			}
+		});
+	}
+}

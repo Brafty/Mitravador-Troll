@@ -1,0 +1,38 @@
+package DaPackage;
+import java.awt.Image;
+import javax.swing.ImageIcon;
+
+public class Oblast {
+	static Oblast[] AllOblasts=new Oblast[9];
+	Oblast[] ProvinceBorder;
+	static int CurrentOb=0;
+	int index;
+	boolean taken;
+	String Name;
+	ImageIcon BaseProv;
+	ImageIcon GreenProv;
+	ImageIcon PurpleProv;
+	ImageIcon Purplef;
+	ImageIcon Greenf;
+	ImageIcon red;
+	int fort;
+	
+	public Oblast(String name) {
+		Name=name;
+		index=CurrentOb;
+		fort=1;
+		BaseProv=new ImageIcon(this.getClass().getResource("/"+Name+"_Neutral.png"));
+		PurpleProv=new ImageIcon(this.getClass().getResource("/"+Name+"_Purple.png"));
+		GreenProv=new ImageIcon(this.getClass().getResource("/"+Name+"_Green.png"));
+		Greenf=new ImageIcon(this.getClass().getResource("/"+Name+"_Green_f.png"));
+		Purplef=new ImageIcon(this.getClass().getResource("/"+Name+"_Purple_f.png"));
+		red=new ImageIcon(this.getClass().getResource("/"+Name+"_red.png"));
+		taken=false;
+		AllOblasts[CurrentOb]=this;
+		CurrentOb++;
+	}
+	
+	public void AddBorder(Oblast[] border) {
+		ProvinceBorder=border;
+	}
+}

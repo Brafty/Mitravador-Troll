@@ -1,0 +1,848 @@
+package DaPackage;
+
+import java.awt.EventQueue;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import java.awt.Image;
+import javax.swing.JLabel;
+import javax.swing.JComboBox;
+import java.awt.Font;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.util.Random;
+import javax.swing.SwingConstants;
+import java.awt.Color;
+import java.awt.Component;
+
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class GameWindow extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+	private static JPanel contentPane;
+	static int Round=0;
+	static JComboBox<String> ComboProvince;
+	static boolean TurnEnded=true;
+	static Country Player1;
+	static Country AI;
+	static ImageIcon QPL;
+	static int rndi;
+	static Random rnd=new Random();
+	static JLabel QuestionPanelLabel;
+	static int Timertime=15;
+	static boolean TimerEnded=true;
+	static JLabel TimerLabel;
+	static JButton EndTurnButton;
+	static JTextArea QuestionArea;
+	static int Answer=-1;
+	static SpecButton[] AllSpecButtons=new SpecButton[4];
+	static Thread TakeAction=new Thread();
+	static Oblast Desired;
+	static int iDesired;
+	static boolean first;
+	static int AIAnswer;
+	static Color PlayerColor=new Color(65,130,90);
+	static Color AIColor=new Color(100,85,125);
+	static Color MiddleColor=new Color(81,110,106);
+	static int hihi;
+	static JLabel P2P; 
+	static JLabel P1P; 
+	static JLabel DAWIN;
+	static int RoundNumber=16;
+	static int Aichance=50;
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					GameWindow frame = new GameWindow();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	static void TurnSystem() {
+
+			TurnEnded=false;
+			TimerEnded=true;
+		if(Round==0) {
+			Player1=new Country("Player1",SelectedOblast(),"_Green");
+			SelectedOblast().BaseProv=SelectedOblast().Greenf;
+			SelectedOblast().fort=3;
+			LastLabelChosen=null;
+			boolean check;
+			do {
+			rndi=rnd.nextInt(9);
+			check=true;
+			for(int i=0;i<Oblast.AllOblasts[rndi].ProvinceBorder.length;i++) {
+				if(Player1.MainProvince.equals(Oblast.AllOblasts[rndi].ProvinceBorder[i])) check=false;
+			}
+			}while(Oblast.AllOblasts[rndi].taken||!check);
+			
+			AI=new Country("AI",Oblast.AllOblasts[rndi],"_Purple");
+			Oblast.AllOblasts[rndi].BaseProv=Oblast.AllOblasts[rndi].Purplef;
+			Oblast.AllOblasts[rndi].fort=3;
+			LabelList[rndi].setIcon(Oblast.AllOblasts[rndi].Purplef);
+			
+			P1P.setText(Integer.toString(Player1.Points));
+			P2P.setText(Integer.toString(AI.Points));
+			
+			UpdateComboProvince(false);
+			TurnEnded=true;
+		}else {
+			ReloadAction(false);
+			first=true;
+			TakeAction.start();
+		}
+
+		System.out.println("Round: "+Round);
+		Round++;
+
+	}
+	
+	static void ReloadAction(boolean ai) {
+		if(!AllTaken()) {
+	TakeAction=new Thread(()->{
+		EndTurnButton.setEnabled(false);
+		ComboProvince.setEnabled(false);
+		QuestionPanelLabel.show();
+		AllSpecButtons[0].show();
+		AllSpecButtons[1].show();
+		AllSpecButtons[2].show();
+		AllSpecButtons[3].show();
+		QuestionArea.show();
+		
+		if(ai) {
+			AllSpecButtons[0].setEnabled(false);
+			AllSpecButtons[1].setEnabled(false);
+			AllSpecButtons[2].setEnabled(false);
+			AllSpecButtons[3].setEnabled(false);
+
+		}
+
+		ResetClock(); Clock.start();
+		
+		do {
+		rndi=rnd.nextInt(Question.AllQuestions.length);
+		}while(Question.AllQuestions[rndi]==null);
+
+		QuestionArea.setText(Question.AllQuestions[rndi].title);
+		AllSpecButtons[0].setText(Question.AllQuestions[rndi].AllOptions[0]);
+		AllSpecButtons[1].setText(Question.AllQuestions[rndi].AllOptions[1]);	
+		AllSpecButtons[2].setText(Question.AllQuestions[rndi].AllOptions[2]);
+		AllSpecButtons[3].setText(Question.AllQuestions[rndi].AllOptions[3]);
+		
+		if(ai) {
+			if(rnd.nextInt(100)<Aichance) {
+				Answer=Question.AllQuestions[rndi].right;
+			}else if(Question.AllQuestions[rndi].right==3) {
+				Answer=Question.AllQuestions[rndi].right-1;				
+			}else {
+				Answer=Question.AllQuestions[rndi].right+1;					
+			}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+
+			}
+		}
+		
+		
+		while(Answer==-1&&!TimerEnded) {
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			System.out.println("Answer");
+		}	
+		}
+		TimerEnded=true;
+			
+			if(Answer!=-1) {
+				if(!ai) {
+				AllSpecButtons[Answer].setColor(PlayerColor);
+				}else {
+					AllSpecButtons[Answer].setColor(AIColor);					
+				}
+				hihi=Answer;
+			}
+			AllSpecButtons[Question.AllQuestions[rndi].right].setBorder(BorderFactory.createLineBorder(new Color(255,0,0),9));
+			if(Clock.isAlive())Clock.stop();
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				
+			}
+			AllSpecButtons[Question.AllQuestions[rndi].right].setBorder(BorderFactory.createLineBorder(new Color(255,0,0),0));
+			if(Question.AllQuestions[rndi].right==Answer) {
+				if(!ai) {
+
+			Player1.AddProvince(Oblast.AllOblasts[SelectedIndex()]);
+			LastLabelChosen=null;
+
+				}else {
+					AI.AddProvince(Oblast.AllOblasts[iDesired]);
+
+
+				}
+			}
+
+			if(ai) {
+			LabelList[iDesired].setIcon(Oblast.AllOblasts[iDesired].BaseProv);
+			}
+			UpdateComboProvince(false);	
+			Answer=-1;
+			P1P.setText(Integer.toString(Player1.Points));
+			P2P.setText(Integer.toString(AI.Points));
+			EndTurnButton.setEnabled(true);
+			ComboProvince.setEnabled(true);
+			QuestionPanelLabel.hide();
+			AllSpecButtons[0].hide();
+			AllSpecButtons[1].hide();
+			AllSpecButtons[2].hide();
+			AllSpecButtons[3].hide();
+			QuestionArea.hide();
+			Question.AllQuestions[rndi]=null;
+
+			if(Round==RoundNumber) {
+				if(AI.Points>Player1.Points) {
+					DAWIN.setText("YOU LOSE!");
+					EndTurnButton.setEnabled(false);
+					ComboProvince.setEnabled(false);
+					TakeAction.stop();
+				}else {
+					DAWIN.setText("YOU WIN!");
+					EndTurnButton.setEnabled(false);
+					ComboProvince.setEnabled(false);
+					AllSpecButtons[0].hide();
+					AllSpecButtons[1].hide();
+					AllSpecButtons[2].hide();
+					AllSpecButtons[3].hide();
+					QuestionPanelLabel.hide();
+					TakeAction.stop();
+				}
+			}
+			
+			if(ai) {
+				AllSpecButtons[0].setEnabled(true);
+				AllSpecButtons[1].setEnabled(true);
+				AllSpecButtons[2].setEnabled(true);
+				AllSpecButtons[3].setEnabled(true);			
+			}
+			AllSpecButtons[hihi].setColor(new Color(252, 247, 194));
+			Render();
+			TimerLabel.setText("");
+			if(first&&!AllTaken()) {
+			first=false;
+			AIUncontested();
+			}
+			TurnEnded=true;
+	});	
+		}else {
+			TakeAction=new Thread(()->{
+				EndTurnButton.setEnabled(false);
+				ComboProvince.setEnabled(false);
+				QuestionPanelLabel.show();
+				AllSpecButtons[0].show();
+				AllSpecButtons[1].show();
+				AllSpecButtons[2].show();
+				AllSpecButtons[3].show();
+				QuestionArea.show();
+
+				ResetClock(); Clock.start();
+				
+				do {
+				rndi=rnd.nextInt(30);
+				}while(Question.AllQuestions[rndi]==null);
+				QuestionArea.setText(Question.AllQuestions[rndi].title);
+				AllSpecButtons[0].setText(Question.AllQuestions[rndi].AllOptions[0]);
+				AllSpecButtons[1].setText(Question.AllQuestions[rndi].AllOptions[1]);	
+				AllSpecButtons[2].setText(Question.AllQuestions[rndi].AllOptions[2]);
+				AllSpecButtons[3].setText(Question.AllQuestions[rndi].AllOptions[3]);
+				
+
+					if(rnd.nextInt(100)<Aichance) {
+						AIAnswer=Question.AllQuestions[rndi].right;
+					}else if(Question.AllQuestions[rndi].right==3) {
+						AIAnswer=Question.AllQuestions[rndi].right-1;				
+					}else {
+						AIAnswer=Question.AllQuestions[rndi].right+1;					
+					}
+					
+				
+				
+				while(Answer==-1&&!TimerEnded) {
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					System.out.println("Answer");
+				}	
+				}
+
+					if(Answer!=-1) {
+						if(Answer==AIAnswer) {AllSpecButtons[Answer].setColor(MiddleColor);}else {
+						AllSpecButtons[Answer].setColor(PlayerColor);
+						AllSpecButtons[AIAnswer].setColor(AIColor);
+						}
+						hihi=Answer;
+					}else {
+					AllSpecButtons[AIAnswer].setColor(AIColor);
+					}
+					
+					AllSpecButtons[Question.AllQuestions[rndi].right].setBorder(BorderFactory.createLineBorder(new Color(255,0,0),9));
+					if(Clock.isAlive())Clock.stop();
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e) {
+						
+					}
+					AllSpecButtons[Question.AllQuestions[rndi].right].setBorder(BorderFactory.createLineBorder(new Color(255,0,0),0));
+					if(Question.AllQuestions[rndi].right==Answer&&Question.AllQuestions[rndi].right==AIAnswer) {
+						System.out.println("Equal");
+					}
+					else if(!ai&&Answer==Question.AllQuestions[rndi].right) {
+						System.out.println("Player");
+						if(SelectedOblast().fort==1) {
+						AI.RemoveProvince(SelectedOblast());
+						Player1.AddProvince(SelectedOblast());
+						}else {
+							SelectedOblast().fort--;
+						}
+					}
+					else if(ai&&AIAnswer==Question.AllQuestions[rndi].right) {
+						System.out.println("ai");
+						if(Desired.fort==1) {
+						Player1.RemoveProvince(Desired);
+						AI.AddProvince(Desired);
+						}else {
+							Desired.fort--;
+						}
+					}
+					if(Answer==Question.AllQuestions[rndi].right) Player1.Points+=50;
+					if(AIAnswer==Question.AllQuestions[rndi].right) AI.Points+=50;
+					if(ai) {
+						LabelList[iDesired].setIcon(Oblast.AllOblasts[iDesired].BaseProv);
+					}else {
+						LabelList[SelectedIndex()].setIcon(Oblast.AllOblasts[iDesired].BaseProv);
+					}
+					UpdateComboProvince(false);	
+					Answer=-1;
+					Question.AllQuestions[rndi]=null;
+					EndTurnButton.setEnabled(true);
+					ComboProvince.setEnabled(true);
+					QuestionPanelLabel.hide();
+					AllSpecButtons[0].hide();
+					AllSpecButtons[1].hide();
+					AllSpecButtons[2].hide();
+					AllSpecButtons[3].hide();
+					QuestionArea.hide();
+
+					if(ai) {
+						AllSpecButtons[0].setEnabled(true);
+						AllSpecButtons[1].setEnabled(true);
+						AllSpecButtons[2].setEnabled(true);
+						AllSpecButtons[3].setEnabled(true);			
+					}
+					P1P.setText(Integer.toString(Player1.Points));
+					P2P.setText(Integer.toString(AI.Points));
+					AllSpecButtons[hihi].setColor(new Color(252, 247, 194));
+					AllSpecButtons[AIAnswer].setColor(new Color(252, 247, 194));
+					Render();
+					P1P.setText(Integer.toString(Player1.Points));
+					P2P.setText(Integer.toString(AI.Points));
+					TimerLabel.setText("");
+					CheckWinCondition();
+					if(first) {
+					first=false;
+					AIUncontested();
+					
+					if(Round==RoundNumber) {
+						if(AI.Points>Player1.Points) {
+							DAWIN.setText("YOU LOSE!");
+							EndTurnButton.setEnabled(false);
+							ComboProvince.setEnabled(false);
+							AllSpecButtons[0].hide();
+							AllSpecButtons[1].hide();
+							AllSpecButtons[2].hide();
+							AllSpecButtons[3].hide();
+							QuestionPanelLabel.hide();
+							TakeAction.stop();
+						}else {
+							DAWIN.setText("YOU WIN!");
+							EndTurnButton.setEnabled(false);
+							ComboProvince.setEnabled(false);
+							AllSpecButtons[0].hide();
+							AllSpecButtons[1].hide();
+							AllSpecButtons[2].hide();
+							AllSpecButtons[3].hide();
+							QuestionPanelLabel.hide();
+							TakeAction.stop();
+						}
+					}
+					}
+					TurnEnded=true;
+			});				
+		}
+	}
+
+	static void AIUncontested() {
+
+		AI.CalculateBorder();
+		if(!AllTaken()) {
+			AI.removeTaken();
+		}
+			Desired=AI.Border.get(rnd.nextInt(AI.Border.size()));
+
+			iDesired=OblastIndex(Desired);
+			LabelList[iDesired].setIcon(Oblast.AllOblasts[iDesired].red);
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			ReloadAction(true);
+			TakeAction.start();
+	}
+	
+	public GameWindow() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 1400, 950);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		
+		DAWIN = new JLabel("");
+		DAWIN.setHorizontalAlignment(SwingConstants.CENTER);
+		DAWIN.setFont(new Font("Tahoma", Font.PLAIN, 99));
+		DAWIN.setBounds(200, 400, 1000, 150);
+		contentPane.add(DAWIN);
+
+		
+		QuestionArea = new JTextArea();
+		QuestionArea.setRows(3);
+		QuestionArea.setAlignmentX(Component.CENTER_ALIGNMENT);
+		QuestionArea.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		QuestionArea.setLineWrap(true);
+		QuestionArea.setBackground(new Color(251, 243, 162));
+		QuestionArea.setEditable(false);
+		QuestionArea.setBounds(350, 150, 700, 145);
+		contentPane.add(QuestionArea);
+		
+		AllSpecButtons[0]=new SpecButton();
+		AllSpecButtons[0].setFont(new Font("Tahoma", Font.PLAIN, 24));
+		AllSpecButtons[0].setColor(new Color(252, 247, 194));
+		AllSpecButtons[0].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Answer=0;
+			}
+		});
+		AllSpecButtons[0].setBounds(400, 325, 600, 80);
+		contentPane.add(AllSpecButtons[0]);
+		
+		AllSpecButtons[1]=new SpecButton();
+		AllSpecButtons[1].setFont(new Font("Tahoma", Font.PLAIN, 24));
+		AllSpecButtons[1].setColor(new Color(252, 247, 194));
+		AllSpecButtons[1].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Answer=1;
+			}
+		});
+
+		AllSpecButtons[1].setBounds(400, 445, 600, 80);
+		contentPane.add(AllSpecButtons[1]);
+		
+		AllSpecButtons[2]=new SpecButton();
+		AllSpecButtons[2].setFont(new Font("Tahoma", Font.PLAIN, 24));
+		AllSpecButtons[2].setColor(new Color(252, 247, 194));
+		AllSpecButtons[2].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Answer=2;
+			}
+		});
+		AllSpecButtons[2].setBounds(400, 565, 600, 80);
+		contentPane.add(AllSpecButtons[2]);
+		
+		AllSpecButtons[3]=new SpecButton();
+		AllSpecButtons[3].setFont(new Font("Tahoma", Font.PLAIN, 24));
+		AllSpecButtons[3].setColor(new Color(252, 247, 194));
+		AllSpecButtons[3].addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Answer=3;
+			}
+		});
+		AllSpecButtons[3].setBounds(400, 685, 600, 80);
+		contentPane.add(AllSpecButtons[3]);
+		
+		AllSpecButtons[0].hide();
+		AllSpecButtons[1].hide();
+		AllSpecButtons[2].hide();
+		AllSpecButtons[3].hide();
+		QuestionArea.hide();
+		
+		QuestionPanelLabel= new JLabel("");
+		QuestionPanelLabel.setBounds(300, 75, 800, 800);
+
+		QPL=new ImageIcon(this.getClass().getResource("/QuestionPage.png"));
+		QuestionPanelLabel.setIcon(QPL);
+		contentPane.add(QuestionPanelLabel);
+		QuestionPanelLabel.hide();
+		
+		setContentPane(contentPane);
+		LoadMap();
+
+		EndTurnButton = new JButton("");
+		ImageIcon ic=new ImageIcon(this.getClass().getResource("/EndTurnButton.png"));
+		EndTurnButton.setIcon(ic);
+		EndTurnButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(TurnEnded) {
+					TurnEnded=false;
+					TurnSystem();
+				}
+			}
+		});
+		EndTurnButton.setBounds(1150, 25, 200, 40);
+
+		contentPane.add(EndTurnButton);
+		
+
+		
+		TimerLabel = new JLabel("");
+		TimerLabel.setFont(new Font("Matura MT Script Capitals", Font.PLAIN, 99));
+		TimerLabel.setBackground(new Color(255, 255, 255));
+		TimerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		TimerLabel.setBounds(10, 740, 157, 145);
+		contentPane.add(TimerLabel);
+		
+		JLabel PlayerName = new JLabel("Player1:");
+		PlayerName.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		PlayerName.setBounds(417, 25, 73, 39);
+		contentPane.add(PlayerName);
+		
+		P1P= new JLabel("");
+		P1P.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		P1P.setBounds(500, 25, 200, 39);
+		contentPane.add(P1P);
+		
+		JLabel AIName = new JLabel("AI:");
+		AIName.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		AIName.setBounds(719, 25, 36, 39);
+		contentPane.add(AIName);
+		
+		P2P= new JLabel("");
+		P2P.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		P2P.setBounds(765, 25, 200, 39);
+		contentPane.add(P2P);
+		
+		LoadTrivia();
+		
+
+	}
+	
+	static Oblast BurgasProvince;
+	static JLabel Burgas;
+	
+	static Oblast LovechProvince;
+	static JLabel Lovech;
+	
+	static Oblast PirinProvince;
+	static JLabel Pirin;
+	
+	static Oblast PlovdivProvince;
+	static JLabel Plovdiv;
+	
+	static Oblast SilistraProvince;
+	static JLabel Silistra;
+	
+	static Oblast SofiaProvince;
+	static JLabel Sofia;
+	
+	static Oblast StaraZagoraProvince;
+	static JLabel StaraZagora;
+
+	static Oblast VarnaProvince;
+	static JLabel Varna;
+	
+	static Oblast VidinProvince;
+	static JLabel Vidin;
+	
+	static int xOffSet=90;
+	static int yOffSet=100;
+	
+	static JLabel[] LabelList=new JLabel[9];
+	static JLabel LastLabelChosen;
+	static ImageIcon LastIcon;
+	
+	static void LoadMap() {
+		BurgasProvince=new Oblast("Burgas");
+		contentPane.setLayout(null);
+		Burgas = new JLabel("");
+		Burgas.setBounds(90, 100, 1200, 780);
+		Burgas.setIcon(BurgasProvince.BaseProv);
+		LabelList[0]=Burgas;
+		contentPane.add(Burgas);
+		
+		LovechProvince=new Oblast("Lovech");
+		Lovech = new JLabel("");
+		Lovech.setBounds(90, 100, 1200, 780);
+		Lovech.setIcon(LovechProvince.BaseProv);
+		LabelList[1]=Lovech;
+		contentPane.add(Lovech);
+		
+		PirinProvince=new Oblast("Pirin");
+		Pirin = new JLabel("");
+		Pirin.setBounds(90, 100, 1200, 780);
+		Pirin.setIcon(PirinProvince.BaseProv);	
+		LabelList[2]=Pirin;
+		contentPane.add(Pirin);
+		
+		PlovdivProvince=new Oblast("Plovdiv");
+		Plovdiv = new JLabel("");
+		Plovdiv.setBounds(90, 100, 1200, 780);
+		Plovdiv.setIcon(PlovdivProvince.BaseProv);	
+		LabelList[3]=Plovdiv;
+		contentPane.add(Plovdiv);
+
+		SilistraProvince=new Oblast("Silistra");
+		Silistra = new JLabel("");
+		Silistra.setBounds(90, 100, 1200, 780);
+		Silistra.setIcon(SilistraProvince.BaseProv);
+		LabelList[4]=Silistra;
+		contentPane.add(Silistra);
+		
+		SofiaProvince=new Oblast("Sofia");
+		Sofia = new JLabel("");
+		Sofia.setBounds(90, 100, 1200, 780);
+		Sofia.setIcon(SofiaProvince.BaseProv);
+		LabelList[5]=Sofia;
+		contentPane.add(Sofia);
+		
+		StaraZagoraProvince=new Oblast("Stara Zagora");
+		StaraZagora = new JLabel("");
+		StaraZagora.setBounds(90, 100, 1200, 780);
+		StaraZagora.setIcon(StaraZagoraProvince.BaseProv);
+		LabelList[6]=StaraZagora;
+		contentPane.add(StaraZagora);
+		
+		VarnaProvince=new Oblast("Varna");
+		Varna = new JLabel("");
+		Varna.setBounds(90, 100, 1200, 780);
+		Varna.setIcon(VarnaProvince.BaseProv);
+		LabelList[7]=Varna;
+		contentPane.add(Varna);
+		
+		VidinProvince=new Oblast("Vidin");
+		Vidin = new JLabel("");
+		Vidin.setBounds(90, 100, 1200, 780);
+		Vidin.setIcon(VidinProvince.BaseProv);	
+		LabelList[8]=Vidin;
+		contentPane.add(Vidin);
+		
+		ComboProvince= new JComboBox();
+		ComboProvince.setFont(new Font("Ubuntu", Font.BOLD | Font.ITALIC, 18));
+		ComboProvince.setBounds(30, 25, 300, 30);
+		
+		for(int i=0;i<Oblast.AllOblasts.length;i++) {
+			ComboProvince.addItem(Oblast.AllOblasts[i].Name);
+		}
+		
+		ComboProvince.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(TurnEnded) {
+				for(int i=0;i<Oblast.AllOblasts.length;i++) {
+					if(Oblast.AllOblasts[i].Name.equals(ComboProvince.getSelectedItem())){
+						if(LastLabelChosen!=null) {LastLabelChosen.setIcon(LastIcon);}
+						if(Round==0) {LabelList[i].setIcon(Oblast.AllOblasts[i].Greenf);
+						}else {
+							LabelList[i].setIcon(Oblast.AllOblasts[i].red);
+						}
+						LastIcon=Oblast.AllOblasts[i].BaseProv;
+						LastLabelChosen=LabelList[i];
+						}
+					}
+				}
+			}
+			
+		});
+		contentPane.add(ComboProvince);
+		
+		//BORDERS
+		BurgasProvince.AddBorder(new Oblast[] {StaraZagoraProvince,VarnaProvince,SilistraProvince,LovechProvince});
+		LovechProvince.AddBorder(new Oblast[] {VidinProvince,SofiaProvince,PlovdivProvince,StaraZagoraProvince,BurgasProvince,SilistraProvince});
+		PirinProvince.AddBorder(new Oblast[] {SofiaProvince,PlovdivProvince});
+		PlovdivProvince.AddBorder(new Oblast[] {PirinProvince,SofiaProvince,LovechProvince,StaraZagoraProvince});
+		SilistraProvince.AddBorder(new Oblast[] {VarnaProvince,BurgasProvince,LovechProvince});
+		SofiaProvince.AddBorder(new Oblast[] {VidinProvince,LovechProvince,PlovdivProvince,PirinProvince});
+		StaraZagoraProvince.AddBorder(new Oblast[] {PlovdivProvince,LovechProvince,BurgasProvince});
+		VarnaProvince.AddBorder(new Oblast[] {SilistraProvince,BurgasProvince});
+		VidinProvince.AddBorder(new Oblast[] {SofiaProvince,LovechProvince});
+	}
+	
+		
+		static void LoadTrivia() {
+			Question Num1=new Question("Какъв цвят са звездите в знамето на Нова Зеландия?","Бялo","Червен","Синьо","Жълт",1);
+			Question Num2=new Question("Кой флаг съдържа Ашока Чахра, 24-спицово колело, в центъра си?","Индия","Шри Ланка","Бангладеш","Пакистан",0);
+			Question Num3=new Question("Какво е името на емблематичната сграда на камбоджанското знаме?","Пагода Шве Дагон","Ангкор Ват","Фушими Инари Тайша","Джокярката",1);
+			Question Num4=new Question("Знамето на коя държава съдържа най-голямата звезда от всички световни знамена?","Централноафриканска република","Суринам","Мианмар","Йемен",2);
+			Question Num5=new Question("Кой е единственият щат на САЩ с флаг, съдържащ Юнион Джак?","Ню Хемпшир","Род Айлънд","Масачузетс","Хавай",3);
+			Question Num6=new Question("Кой е най-дългият висящ мост в света?","Голдън Гейт","Акаши Кайки","Шихоумен","Висящият мост на Клифтън",1);
+			Question Num7=new Question("В коя държава е най-високият водопад в Европа?","Исландия","Финландия","Швеция","Норвегия",3);
+			Question Num8=new Question("Кой град в превод на английски означава „кално сливане“?","Сингапур","Джакарта","Куала Лампур","Хонг Конг",2);
+			Question Num9=new Question("Кой от тези известни композитори беше глух?","Бетовен","Моцарт","Бах","Хендел",0);
+			Question Num10=new Question("Кой беше главният архитект на Айфеловата кула?","Франк Лойд Райт","Виктор Хора","Лудвиг Мис ван дер Рое","Стивън Совестре",3);
+			Question Num11=new Question("Кой от тези инструменти свири заедно с 2 цигулки и виолончело в традиционен струнен квартет?","Арфа","Виола","Контрабас","Пиано",1);
+			Question Num12=new Question("Кое от тях НЕ е животно от китайския зодиак?","Петел","Маймуна","Прасе","Слон",3);
+			Question Num13=new Question("Окелотите живеят главно на кой континент?","Африка","Азия","Европа","Южна Америка",3);
+			Question Num14=new Question("Някой с „музофобия“ страда от страх от кое животно?","Сурикати","Слонове","Мишки","Щрауси",2);
+			Question Num15=new Question("Кое животно има най-дълъг език спрямо дължината на тялото си?","Мравояд","Хамелеон","Слънчева мечка","Колибри",1);
+			Question Num16=new Question("Във филма \"Колите\" кой озвучава героя Мълния Маккуин?","Том Ханкс","Оуен Уилсън","Бен Стилър","Матю Макконъхи",1);
+			Question Num17=new Question("Кой филм спечели наградата „Оскар“ за най-добър филм през 2012 г.?","The Hurt Locker","Argo","Речта на краля","Художникът",3);
+			Question Num18=new Question("В кой филм участват Харисън Форд, Шон Йънг и Рутгер Хауер?","Blade runner","Нападатели на изгубения ковчег","Беглецът","Междузвездни войни: Епизод IV - Нова надежда",0);
+			Question Num19=new Question("Кой тенисист печели Мастърс Монте Карло 8 години поред?","Роджър Федерер","Фабио Фогнини","Бьорн Борг","Рафаел Надал",3);
+			Question Num20=new Question("Кой град беше домакин на Олимпийските игри през 2000 г.?","Сидни","Токьо","Лос Анджелис","Париж",0);
+			Question Num21=new Question("Коя от тези държави има най-много звезди на знамето си?","Узбекистан","Папуа Нова Гвинея","Китай","Боливия",0);
+			Question Num22=new Question("С 12 различни цвята, знамето на коя държава е най-цветното в света","Белиз","Сейшели","Боливия","Доминика",0);
+			Question Num23=new Question("Най-късата международна граница в света е дълга само 150 метра и свързва Замбия с коя друга държава?","Кения","Уганда","Ботсуана","Ангола",2);
+			Question Num24=new Question("Коя е столицата на Намибия","Уагадугу","Арка","Виндхук","Кигали",2);
+			Question Num25=new Question("Кой от тези градове има най-голямо население?","Ню Делхи","Мексико Сити","Шанхай","Сао Пауло",2);
+			Question Num26=new Question("Коя е най-гъсто населената държава на земята?","Ямайка","Шри Ланка","Монако","Сингапур",2);
+			Question Num27=new Question("Зулуто са племенна група в:","Южна Африка","Зимбабве","Етиопия","Ангола",0);
+			Question Num28=new Question("Кога се подписва Нантския едикт","1618","1648","1572","1598",3);
+			Question Num29=new Question("От колко часа вися да го правя това нещо?","4","8","5","2",2);
+			Question Num30=new Question("Кога хан Кубрат отхвърля властта на Хазарите?","632г.","630г.","640г.","681г.",0);
+			Question Num31=new Question("Кога свършва 100 годишната война?","1337г.","1390г.","1453г.","1437г.",2);
+			Question Num32=new Question("Коя държава се оттървава от ядрените си уръжия през 1989г.","Украйна","Китай","Южна Африка","Беларус",2);
+			
+		}
+	
+	
+		static Oblast SelectedOblast() {
+			for(int i=0;i<Oblast.AllOblasts.length;i++) {
+				if(Oblast.AllOblasts[i].Name.equals(ComboProvince.getSelectedItem())) {
+					return Oblast.AllOblasts[i];
+					}			
+				}
+			return BurgasProvince;
+		}
+		static int SelectedIndex() {
+			for(int i=0;i<Oblast.AllOblasts.length;i++) {
+				if(Oblast.AllOblasts[i].Name.equals(ComboProvince.getSelectedItem())) {
+					return i;
+					}			
+				}
+			return 0;
+		}
+		static int OblastIndex(Oblast k) {
+			for(int i=0;i<Oblast.AllOblasts.length;i++) {
+				if(k.Name.equals(Oblast.AllOblasts[i].Name))return i;
+			}
+			return 0;
+		}
+		static boolean AllTaken() {
+			for(int i=0;i<Oblast.AllOblasts.length;i++) {
+				if(!Oblast.AllOblasts[i].taken) return false;
+			}
+			return true;
+		}
+		static void UpdateComboProvince(boolean justtook) {
+
+			ComboProvince.removeAllItems();
+			Player1.CalculateBorder();
+			if(!AllTaken()) {
+			Player1.removeTaken();
+			}
+			Player1.Border.forEach((n)->ComboProvince.addItem(n.Name));
+			LabelList[SelectedIndex()].setIcon(Oblast.AllOblasts[SelectedIndex()].red);
+			LastLabelChosen=LabelList[SelectedIndex()];
+			LastIcon=Oblast.AllOblasts[SelectedIndex()].BaseProv;
+			
+		}
+
+
+		static Thread Clock=new Thread(()->{
+			TimerEnded=false;
+			while(Timertime>-1) {
+				TimerLabel.setText(Integer.toString(Timertime));
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				System.out.println("timer");
+			}
+			Timertime--;
+
+		}
+			TimerEnded=true;
+	});
+
+		static void ResetClock() {
+			Timertime=15;
+			 Clock=new Thread(()->{
+				TimerEnded=false;
+				while(Timertime>-1&&!TimerEnded) {
+					TimerLabel.setText(Integer.toString(Timertime));
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					System.out.println("timer");
+				}
+				Timertime--;
+
+			}
+				TimerEnded=true;
+		});			
+		
+		}
+		static void Render() {
+			Player1.OwnedProvinces.forEach((n)->{
+				if(n.equals(Player1.MainProvince)) {
+					LabelList[n.index].setIcon(n.Greenf);
+				}else {
+					LabelList[n.index].setIcon(n.GreenProv);				
+				}
+			});
+			AI.OwnedProvinces.forEach((n)->{
+				if(n.equals(AI.MainProvince)) {
+					LabelList[n.index].setIcon(n.Purplef);
+				}else {
+					LabelList[n.index].setIcon(n.PurpleProv);					
+				}
+			});
+		}
+		static void CheckWinCondition() {
+
+			if(Player1.OwnedProvinces.size()==9||!AI.OwnedProvinces.contains(AI.MainProvince)) {
+			EndTurnButton.setEnabled(false);
+			ComboProvince.setEnabled(false);
+			DAWIN.setText("YOU WIN!");
+			AllSpecButtons[0].hide();
+			AllSpecButtons[1].hide();
+			AllSpecButtons[2].hide();
+			AllSpecButtons[3].hide();
+			QuestionPanelLabel.hide();
+			TakeAction.stop();
+
+			}
+			if(AI.OwnedProvinces.size()==9||!Player1.OwnedProvinces.contains(Player1.MainProvince)) {
+				EndTurnButton.setEnabled(false);
+				ComboProvince.setEnabled(false);
+				DAWIN.setText("YOU LOSE!");
+				AllSpecButtons[0].hide();
+				AllSpecButtons[1].hide();
+				AllSpecButtons[2].hide();
+				AllSpecButtons[3].hide();
+				QuestionPanelLabel.hide();
+				TakeAction.stop();
+
+			}
+		}
+}

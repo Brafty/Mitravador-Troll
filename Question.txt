@@ -1,0 +1,19 @@
+package DaPackage;
+
+public class Question {
+	String title;
+	String[] AllOptions=new String[4];
+	int right;
+	static int current=0;
+	static Question[] AllQuestions=new Question[32];
+	public Question(String title, String q1, String q2, String q3, String q4,int right) {
+		this.title=title;
+		AllOptions[0]=q1;
+		AllOptions[1]=q2;
+		AllOptions[2]=q3;
+		AllOptions[3]=q4;
+		AllQuestions[current]=this;
+		this.right=right;
+		current++;
+	}
+}
