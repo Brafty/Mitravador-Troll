@@ -369,6 +369,8 @@ public class GameWindow extends JFrame {
 					if(Round==RoundNumber) {
 						if(AI.Points>Player1.Points) {
 							DAWIN.setText("YOU LOSE!");
+							if(Clock.isAlive()) Clock.stop();
+							QuestionArea.hide();
 							EndTurnButton.setEnabled(false);
 							ComboProvince.setEnabled(false);
 							AllSpecButtons[0].hide();
@@ -376,9 +378,12 @@ public class GameWindow extends JFrame {
 							AllSpecButtons[2].hide();
 							AllSpecButtons[3].hide();
 							QuestionPanelLabel.hide();
+							QuestionArea.hide();
 							TakeAction.stop();
 						}else {
 							DAWIN.setText("YOU WIN!");
+							if(Clock.isAlive()) Clock.stop();
+							QuestionArea.hide();
 							EndTurnButton.setEnabled(false);
 							ComboProvince.setEnabled(false);
 							AllSpecButtons[0].hide();
@@ -386,6 +391,7 @@ public class GameWindow extends JFrame {
 							AllSpecButtons[2].hide();
 							AllSpecButtons[3].hide();
 							QuestionPanelLabel.hide();
+
 							TakeAction.stop();
 						}
 					}
@@ -823,6 +829,8 @@ public class GameWindow extends JFrame {
 			if(Player1.OwnedProvinces.size()==9||!AI.OwnedProvinces.contains(AI.MainProvince)) {
 			EndTurnButton.setEnabled(false);
 			ComboProvince.setEnabled(false);
+			if(Clock.isAlive()) Clock.stop();
+			QuestionArea.hide();
 			DAWIN.setText("YOU WIN!");
 			AllSpecButtons[0].hide();
 			AllSpecButtons[1].hide();
@@ -835,6 +843,8 @@ public class GameWindow extends JFrame {
 			if(AI.OwnedProvinces.size()==9||!Player1.OwnedProvinces.contains(Player1.MainProvince)) {
 				EndTurnButton.setEnabled(false);
 				ComboProvince.setEnabled(false);
+				if(Clock.isAlive()) Clock.stop();
+				QuestionArea.hide();
 				DAWIN.setText("YOU LOSE!");
 				AllSpecButtons[0].hide();
 				AllSpecButtons[1].hide();
